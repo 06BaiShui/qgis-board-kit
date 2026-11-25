@@ -54,7 +54,7 @@ def panel_ns(board, d, img_path, box, meta):
     mx, my, dw, dh = placed
     mpp = meta.get('mpp') or 3.0
     north(board, mx + dw - 210, my + 26, 0.62)
-    scalebar(d, mpp, mx + 260, my + dh - 96, 1000, 36)
+    scalebar(d, mpp, mx + 260, my + dh - 96, fs=36)   # bar_m 不传，按 mpp 自动选档
     return placed
 
 

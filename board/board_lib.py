@@ -105,19 +105,53 @@ def north(board, x, y, scale=1.0, dark=False):
     board.paste(arrow, (x, y), arrow)
 
 
-def scalebar(d, mpp, cx, y, bar_m=1000, fs=44, dark=False):
+# 比例尺的可选档位（米）。别随便加：要保证一半长度也是整数。
+_NICE_M = (50, 100, 200, 250, 500, 1000, 2000, 2500, 5000, 10000, 20000, 50000)
+
+
+def _nice_bar(mpp, px_min=220, px_max=640):
+    """按 mpp 选一个「画出来 220–640 px 长」的整数档位；都不合适就取最接近区间中点的那档。"""
+    for m in _NICE_M:
+        if px_min <= m / mpp <= px_max:
+            return m
+    mid = (px_min + px_max) / 2
+    return min(_NICE_M, key=lambda m: abs(m / mpp - mid))
+
+
+def scalebar(d, mpp, cx, y, bar_m=None, fs=44, dark=False):
+    """黑白相间比例尺。mpp = 每像素米数（素图 .json 里的 mpp）。
+
+    bar_m 不传就自动选档（100 / 500 / 5000 …），避免「1 km 只有 50 px、三个标签糊成一团」。
+    """
     col = (255, 255, 255) if dark else INK
-    bar_px = int(bar_m / mpp)
+    if not bar_m:
+        bar_m = _nice_bar(mpp)
+    bar_px = max(int(round(bar_m / mpp)), 16)
     half = bar_px // 2
     sx = cx - bar_px // 2
     d.rectangle((sx, y, sx + half, y + 26), fill=col)
     d.rectangle((sx + half, y, sx + bar_px, y + 26),
                 fill=(0, 0, 0, 0) if dark else (255, 255, 255), outline=col, width=4)
+
     sf = f(YH, fs)
-    vals = [('0', sx), (str(bar_m // 2), sx + half), (str(bar_m) + ' 米', sx + bar_px)]
-    for val, px in vals:
-        bb = d.textbbox((0, 0), val, font=sf)
-        d.text((px - (bb[2] - bb[0]) / 2, y + 34), val, font=sf, fill=col)
+
+    def tw(t):
+        bb = d.textbbox((0, 0), t, font=sf)
+        return bb[2] - bb[0]
+
+    end_txt = ('%g 公里' % (bar_m / 1000)) if bar_m >= 1000 else ('%d 米' % bar_m)
+    labels = [('0', sx)]
+    # 中间那条标 500 / 250 / 2.5 都会串味：只在 ≤1 km 且两侧留得下时才标
+    mid_txt = str(bar_m // 2)
+    if bar_m <= 1000 and bar_px >= tw(mid_txt) + tw(end_txt) * 1.15 + 40:
+        labels.append((mid_txt, sx + half))
+    labels.append((end_txt, sx + bar_px))
+
+    for val, px in labels:
+        w = tw(val)
+        x = px - w / 2
+        x = max(8, min(x, W - w - 8))            # 别冲出画布
+        d.text((x, y + 34), val, font=sf, fill=col)
 
 
 def wrap(d, text, font, maxw):
