@@ -1,0 +1,12 @@
+# 生成物
+out/
+成品/
+*.pyc
+__pycache__/
+# 临时
+*.log
+.~lock*
+# 系统
+.DS_Store
+Thumbs.db
+desktop.ini

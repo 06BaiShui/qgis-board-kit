@@ -1,0 +1,10 @@
+{
+  "_说明": "只有 out 必填；layers/ fit.layers 留空 = 用当前工程里所有可见图层（上→下）。填上你自己工程里的图层名更可控。",
+  "out": "../out/map_example.png",
+  "width": 2900,
+  "height": 2300,
+  "dpi": 300,
+  "fit": {"pad": 0.06},
+  "layers": [],
+  "background": "#FFFFFF"
+}
